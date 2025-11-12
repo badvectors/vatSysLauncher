@@ -27,4 +27,10 @@
     </Resource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Plugins.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

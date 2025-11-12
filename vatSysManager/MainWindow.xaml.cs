@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Win32;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -21,12 +22,15 @@ namespace vatSysManager
         private static Settings Settings = null;
         private static HttpClient HttpClient = new();
         private static List<ProfileOption> ProfileOptions = [];
-
+        private static string SettingsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "vatSys Launcher");
+        private static string SettingsFile => Path.Combine(SettingsFolder, "Settings.json");
         private static string WorkingDirectory => $"{Settings.ProfileDirectory}\\Temp";
+        private static string VatsysExe => $"{Settings.BaseDirectory}\\bin\\vatSys.exe";
 
         public MainWindow()
         {
             InitializeComponent();
+
             _ = Init();
         }
 
@@ -46,7 +50,7 @@ namespace vatSysManager
             await InitProfiles();
 
             HomeButton.IsEnabled = true;
-            //PluginsButton.IsEnabled = true;
+            PluginsButton.IsEnabled = true;
             ProfilesButton.IsEnabled = true;
             SetupButton.IsEnabled = true;
             WaitTextBlock.Visibility = Visibility.Hidden;
@@ -62,6 +66,10 @@ namespace vatSysManager
 
         private async Task InitProfiles()
         {
+            ProfileOptions.Clear();
+            
+            ProfilesLoading.Visibility = Visibility.Visible;
+
             var profiles = new List<ProfileOption>();
 
             var installed = ProfilesGetInstalled();
@@ -83,27 +91,58 @@ namespace vatSysManager
             }
 
             ProfileOptions = profiles;
+
+            ProfilesLoading.Visibility = Visibility.Hidden;
+
+            ProfilesList.ItemsSource = ProfileOptions;
         }
 
         private void InitSettings()
         {
-            var settings = new Settings();
-
-            var defaultProfileDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "vatSys Files", "Profiles");
-            
-            var defaultBaseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "vatSys");
-
-            if (Directory.Exists(defaultProfileDirectory))
+            if (!Directory.Exists(SettingsFolder))
             {
-                settings.ProfileDirectory = defaultProfileDirectory;
+                Directory.CreateDirectory(SettingsFolder);
             }
 
-            if (Directory.Exists(defaultBaseDirectory))
+            if (!File.Exists(SettingsFile))
             {
-                settings.BaseDirectory = defaultBaseDirectory;
+                var settings = new Settings();
+
+                var defaultProfileDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "vatSys Files", "Profiles");
+
+                var defaultBaseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "vatSys");
+
+                if (Directory.Exists(defaultProfileDirectory))
+                {
+                    settings.ProfileDirectory = defaultProfileDirectory;
+                }
+
+                if (Directory.Exists(defaultBaseDirectory))
+                {
+                    settings.BaseDirectory = defaultBaseDirectory;
+                }
+
+                Settings = settings;
+
+                var settingsFile = JsonConvert.SerializeObject(Settings);
+
+                File.WriteAllText(SettingsFile, settingsFile);
+
+                return;
             }
 
-            Settings = settings;
+            try
+            {
+                var settingsFile = File.ReadAllText(SettingsFile);
+
+                Settings = JsonConvert.DeserializeObject<Settings>(settingsFile);
+            }
+            catch 
+            {
+                File.Delete(SettingsFile);
+
+                InitSettings();
+            }
         }
 
         private void VatSysTimer_Tick(object sender, EventArgs e)
@@ -132,7 +171,7 @@ namespace vatSysManager
             {
                 InitCheckCanvas.Visibility = Visibility.Hidden;
                 HomeButton.IsEnabled = true;
-                ///PluginsButton.IsEnabled = true;
+                PluginsButton.IsEnabled = true;
                 ProfilesButton.IsEnabled = true;
                 SetupButton.IsEnabled = true;
 
@@ -162,7 +201,23 @@ namespace vatSysManager
         private void VatSysLaunchButton_Click(object sender, RoutedEventArgs e)
         {
             if (Settings == null || string.IsNullOrWhiteSpace(Settings.BaseDirectory)) return;
-            Process.Start($"{Settings.BaseDirectory}\\bin\\vatSys.exe");
+            if (!File.Exists(VatsysExe))
+            {
+                string messageBoxText = "Unable to locate vatSys. Update your 'base directory' in the Setup menu.";
+                string caption = "vatSys Launder";
+                MessageBoxButton button = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Error;
+                MessageBoxResult result;
+                result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
+                switch (result)
+                {
+                    case MessageBoxResult.OK:
+                        SetupButton_Click(null, null);
+                        break;
+                }
+                return;
+            }
+            Process.Start(VatsysExe);
             Environment.Exit(1);
         }
 
@@ -174,6 +229,7 @@ namespace vatSysManager
             HomeCanvas.Visibility = Visibility.Hidden;
             ProfilesCanvas.Visibility = Visibility.Hidden;
             UpdaterCanvas.Visibility = Visibility.Hidden;
+            PluginsCanvas.Visibility = Visibility.Hidden;
 
             if (Settings == null) return;
             BaseDirectoryTextBox.Text = Settings.BaseDirectory;
@@ -188,18 +244,29 @@ namespace vatSysManager
             HomeCanvas.Visibility = Visibility.Visible;
             ProfilesCanvas.Visibility = Visibility.Hidden;
             UpdaterCanvas.Visibility = Visibility.Hidden;
+            PluginsCanvas.Visibility = Visibility.Hidden;
         }
 
         private void ProfilesButton_Click(object sender, RoutedEventArgs e)
         {
-            ProfilesList.ItemsSource = ProfileOptions;
-
             CurrentCanvas = ProfilesCanvas;
             SetupCanvas.Visibility = Visibility.Hidden;
             InitCheckCanvas.Visibility = Visibility.Hidden;
             HomeCanvas.Visibility = Visibility.Hidden;
             ProfilesCanvas.Visibility = Visibility.Visible;
             UpdaterCanvas.Visibility = Visibility.Hidden;
+            PluginsCanvas.Visibility = Visibility.Hidden;
+        }
+
+        private void PluginsButton_Click(object sender, RoutedEventArgs e)
+        {
+            CurrentCanvas = PluginsCanvas;
+            SetupCanvas.Visibility = Visibility.Hidden;
+            InitCheckCanvas.Visibility = Visibility.Hidden;
+            HomeCanvas.Visibility = Visibility.Hidden;
+            ProfilesCanvas.Visibility = Visibility.Hidden;
+            UpdaterCanvas.Visibility = Visibility.Hidden;
+            PluginsCanvas.Visibility = Visibility.Visible;
         }
 
         private static async Task<List<ProfileOption>> ProfilesGetAvailable()
@@ -586,5 +653,54 @@ namespace vatSysManager
             public bool Success { get; set; } = false;
             public List<string> Log { get; set; } = [];
         }
+
+        private void BaseDirectoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            var folderDialog = new OpenFolderDialog();
+
+            if (folderDialog.ShowDialog() == true)
+            {
+                Settings.BaseDirectory = folderDialog.FolderName;
+
+                SettingsSave();
+
+                BaseDirectoryTextBox.Text = Settings.BaseDirectory;
+            }
+        }
+
+        private void ProfileDirectoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            var folderDialog = new OpenFolderDialog();
+
+            if (folderDialog.ShowDialog() == true)
+            {
+                Settings.ProfileDirectory = folderDialog.FolderName;
+
+                SettingsSave();
+
+                _ = InitProfiles();
+
+                ProfileDirectoryTextBox.Text = Settings.ProfileDirectory;
+            }
+        }
+
+        private void SettingsSave()
+        {
+            if (!Directory.Exists(SettingsFolder))
+            {
+                Directory.CreateDirectory(SettingsFolder);
+            }
+
+            if (File.Exists(SettingsFile))
+            {
+                File.Delete(SettingsFile);
+            }
+
+            var settingsFile = JsonConvert.SerializeObject(Settings);
+
+            File.WriteAllText(SettingsFile, settingsFile);
+        }
+
+  
     }
 }

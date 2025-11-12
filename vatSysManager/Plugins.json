@@ -1,0 +1,22 @@
+[
+  {
+    "Name": "badvectors/ATISPlugin",
+    "DllName": "ATISPlugin.dll"
+  },
+  {
+    "Name": "badvectors/DiscordPlugin",
+    "DllName": "DiscordPlugin.Plugin.dll"
+  },
+  {
+    "Name": "badvectors/SimulatorPlugin",
+    "DllName": "SimulatorPlugin.dll"
+  },
+  {
+    "Name": "badvectors/VatpacPlugin",
+    "DllName": "VatpacPlugin.dll"
+  },
+  {
+    "Name": "maxrumsey/TrafficInjector",
+    "DllName": "TrafficInjector.Plugin.dll"
+  }
+]
