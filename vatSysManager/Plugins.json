@@ -18,5 +18,9 @@
   {
     "Name": "maxrumsey/TrafficInjector",
     "DllName": "TrafficInjector.Plugin.dll"
+  },
+  {
+    "Name": "YuKitsune/vMaestro",
+    "DllName": "Maestro.Plugin.dll"
   }
 ]
