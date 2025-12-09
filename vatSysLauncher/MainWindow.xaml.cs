@@ -19,7 +19,7 @@ namespace vatSysManager
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static Version Version = new(1, 8);
+        private static Version Version = new(1, 9);
 
         private static readonly string VatsysProcessName = "vatSys";
         private static readonly DispatcherTimer VatSysTimer = new();
@@ -59,7 +59,7 @@ namespace vatSysManager
 
             InitSettings();
 
-            CheckForRestart();
+            await CheckForRestart();
 
             HomeButton_Click(null, null);
 
@@ -91,6 +91,8 @@ namespace vatSysManager
             VatSysTimer.Start();
 
             GetChanges();
+
+            DeleteDirectory(WorkingDirectory);
         }
 
         private async Task CheckVersion()
@@ -251,7 +253,7 @@ namespace vatSysManager
             return windowsPrincipal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
-        private void CheckForRestart()
+        private async Task CheckForRestart()
         {
             if (!File.Exists(RestartFile)) return;
 
@@ -259,7 +261,7 @@ namespace vatSysManager
 
             UpdaterCanvasMode();
 
-            UpdateAll();
+            await UpdateAll();
         }
 
         private async Task InitPlugins()
