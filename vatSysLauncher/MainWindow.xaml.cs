@@ -19,7 +19,7 @@ namespace vatSysManager
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static Version Version = new(1, 9);
+        private static Version Version = new(1, 10);
 
         private static readonly string VatsysProcessName = "vatSys";
         private static readonly DispatcherTimer VatSysTimer = new();
@@ -90,8 +90,6 @@ namespace vatSysManager
 
             VatSysTimer.Start();
 
-            GetChanges();
-
             DeleteDirectory(WorkingDirectory);
         }
 
@@ -158,12 +156,21 @@ namespace vatSysManager
             return true;
         }
 
-        private async Task UpdateAll()
+        private async Task<bool> UpdateAll()
         {
+            UpdaterCanvasMode();
+
             foreach (var code in Changes)
             {
-                await UpdaterAction(code);
+                var success = await UpdaterAction(code);
+
+                if (!success)
+                {
+                    return false;
+                }
             }
+
+            return true;
         }
 
         private void GetChanges()
@@ -294,6 +301,8 @@ namespace vatSysManager
             PluginsInstalled = installed;
 
             PluginsList.ItemsSource = installed;
+
+            GetChanges();
         }
 
         private static async Task<DateTime> PluginsLastRefresh()
@@ -606,6 +615,7 @@ namespace vatSysManager
         private async void VatSysLaunchButton_Click(object sender, RoutedEventArgs e)
         {
             if (Settings == null || string.IsNullOrWhiteSpace(Settings.BaseDirectory)) return;
+            
             if (!File.Exists(VatsysExe))
             {
                 string messageBoxText = "Unable to locate vatSys. Update your 'base directory' in the Setup menu.";
@@ -622,8 +632,13 @@ namespace vatSysManager
                 }
                 return;
             }
-            await UpdateAll();
+
+            var success = await UpdateAll();
+
+            if (!success) return;
+
             Process.Start(VatsysExe);
+            
             Environment.Exit(1);
         }
 
@@ -783,11 +798,11 @@ namespace vatSysManager
             dir.Attributes = FileAttributes.Normal;
         }
 
-        private void UpdaterButton_Click(object sender, RoutedEventArgs e)
+        private async void UpdaterButton_Click(object sender, RoutedEventArgs e)
         {
             UpdaterCanvasMode();
 
-            UpdaterAction(((Button)sender).Tag.ToString());
+            await UpdaterAction(((Button)sender).Tag.ToString());
         }
 
         private async void PluginInstallButton_Click(object sender, RoutedEventArgs e)
@@ -813,7 +828,9 @@ namespace vatSysManager
 
             CurrentCommand = $"Install|Plugin|{pluginResponse.Name}|{location}";
 
-            var success = await RunPluginInstall(pluginResponse, location);
+            var installTo = Path.Combine(location, pluginResponse.DirectoryName);
+
+            var success = await RunPluginInstall(pluginResponse, installTo);
 
             if (!success) return;
 
@@ -822,7 +839,7 @@ namespace vatSysManager
             PluginsButton_Click(null, null);
         }
 
-        private async Task UpdaterAction(string code)
+        private async Task<bool> UpdaterAction(string code)
         {
             CurrentCommand = code;
 
@@ -838,11 +855,13 @@ namespace vatSysManager
 
                     var success = RunDelete(directory);
 
-                    if (!success) return;
+                    if (!success) return false;
 
                     // if success return to profile screen
 
                     await InitProfiles();
+
+                    await InitPlugins();
 
                     ProfilesButton_Click(null, null);
                 }
@@ -850,11 +869,9 @@ namespace vatSysManager
                 {
                     // delete directory
 
-                    var directory = Path.Combine(Settings.ProfileDirectory, split[2]);
-
                     var success = RunDelete(split[3]);
 
-                    if (!success) return;
+                    if (!success) return false;
 
                     // if success return to profile screen
 
@@ -869,19 +886,21 @@ namespace vatSysManager
                 {
                     var profileOption = ProfileOptions.FirstOrDefault(x => x.Title == split[2]);
 
-                    if (profileOption == null) return;
+                    if (profileOption == null) return false;
 
                     var directory = Path.Combine(Settings.ProfileDirectory, split[2]);
 
-                    if (Path.Exists(directory)) return;
+                    if (Path.Exists(directory)) return false;
 
                     var success = await RunProfileInstall(profileOption);
 
-                    if (!success) return;
+                    if (!success) return false;
 
                     // if success return to profile screen
 
                     await InitProfiles();
+
+                    await InitPlugins();
 
                     ProfilesButton_Click(null, null);
                 }
@@ -889,15 +908,13 @@ namespace vatSysManager
                 {
                     //Install|Plugin|PluginName|directory
 
-                    var availablePlugins = await PluginsGetAvailable();
+                    var pluginResponse = PluginsAvailable.FirstOrDefault(x => x.Name == split[2]);
 
-                    var pluginResponse = availablePlugins.FirstOrDefault(x => x.Name == split[2]);
-
-                    if (pluginResponse == null) return;
+                    if (pluginResponse == null) return false;
 
                     var success = await RunPluginInstall(pluginResponse, split[3]);
 
-                    if (!success) return;
+                    if (!success) return false;
 
                     await InitPlugins();
 
@@ -911,25 +928,49 @@ namespace vatSysManager
                 {
                     var profileOption = ProfileOptions.FirstOrDefault(x => x.Title == split[2]);
 
-                    if (profileOption == null) return;
+                    if (profileOption == null) return false;
 
                     var directory = Path.Combine(Settings.ProfileDirectory, split[2]);
 
-                    if (!Path.Exists(directory)) return;
+                    if (!Path.Exists(directory)) return false;
 
                     var success = RunDelete(directory);
 
-                    if (!success) return;
+                    if (!success) return false;
 
                     success = await RunProfileInstall(profileOption);
 
-                    if (!success) return;
+                    if (!success) return false;
 
                     // if success return to profile screen
 
                     await InitProfiles();
 
+                    await InitPlugins();
+
                     ProfilesButton_Click(null, null);
+                }
+                else if (split[1] == "Plugin")
+                {
+                    //Update|Plugin|PluginName|directory
+
+                    // delete directory
+
+                    var success = RunDelete(split[3]);
+
+                    if (!success) return false;
+
+                    var pluginResponse = PluginsAvailable.FirstOrDefault(x => x.Name == split[2]);
+
+                    if (pluginResponse == null) return false;
+
+                    success = await RunPluginInstall(pluginResponse, split[3]);
+
+                    if (!success) return false;
+
+                    await InitPlugins();
+
+                    PluginsButton_Click(null, null);
                 }
             }
 
@@ -939,6 +980,8 @@ namespace vatSysManager
             {
                 File.Delete(RestartFile);
             }
+
+            return true;
         }
 
         private async Task<PluginResponse> GetPluginVersion(PluginResponse pluginResponse)
@@ -981,7 +1024,7 @@ namespace vatSysManager
             }
         }
 
-        private async Task<bool> RunPluginInstall(PluginResponse pluginResponse, string directory, string name = "Temp.zip")
+        private async Task<bool> RunPluginInstall(PluginResponse pluginResponse, string installTo, string name = "Temp.zip")
         {
             UpdaterCanvasMode();
 
@@ -1007,7 +1050,7 @@ namespace vatSysManager
 
             // create directory
 
-            var directoryResult = CreateDirectory(Path.Combine(directory, pluginResponse.DirectoryName));
+            var directoryResult = CreateDirectory(installTo);
 
             UpdaterOutput(directoryResult);
 
@@ -1015,7 +1058,7 @@ namespace vatSysManager
 
             // extract profile
 
-            var extractResult = Extract(Path.Combine(WorkingDirectory, name), Path.Combine(directory, pluginResponse.DirectoryName));
+            var extractResult = Extract(Path.Combine(WorkingDirectory, name), installTo);
 
             UpdaterOutput(extractResult);
 
