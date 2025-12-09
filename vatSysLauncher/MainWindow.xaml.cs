@@ -5,7 +5,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Policy;
 using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,7 +19,7 @@ namespace vatSysManager
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static Version Version = new(1, 0);
+        private static Version Version = new(1, 3);
 
         private static readonly string VatsysProcessName = "vatSys";
         private static readonly DispatcherTimer VatSysTimer = new();
@@ -143,8 +142,24 @@ namespace vatSysManager
 
             if (!downloadResult.Success) return false;
 
-            return true;
+            // run file
+            ProcessStartInfo processStartInfo = new(Path.Combine(WorkingDirectory, "Launcher.exe"));
 
+            // Start the application as new process
+            Process.Start(processStartInfo);
+
+            // Shut down the current (old) process
+            Application.Current.Shutdown();
+
+            return true;
+        }
+
+        private async Task UpdateAll()
+        {
+            foreach (var code in Changes)
+            {
+                await UpdaterAction(code);
+            }
         }
 
         private void GetChanges()
@@ -179,11 +194,6 @@ namespace vatSysManager
 
         }
 
-
-        /// <summary>
-        /// Function to restart the launcher in administrator role
-        /// </summary>
-        /// <returns></returns>
         private static void RestartAsAdministrator()
         {
             if (IsRunningAsAdministrator()) return;
@@ -227,10 +237,6 @@ namespace vatSysManager
             }
         }
 
-        /// <summary>
-        /// Function that check's if current user is in administrator role
-        /// </summary>
-        /// <returns></returns>
         public static bool IsRunningAsAdministrator()
         {
             // Get current Windows user
@@ -247,11 +253,11 @@ namespace vatSysManager
         {
             if (!File.Exists(RestartFile)) return;
 
-            var commend = File.ReadAllText(RestartFile);
+            Changes = File.ReadAllLines(RestartFile).ToList();
 
             UpdaterCanvasMode();
 
-            UpdaterAction(commend);
+            UpdateAll();
         }
 
         private async Task InitPlugins()
@@ -593,7 +599,7 @@ namespace vatSysManager
             VatSysClose();
         }
 
-        private void VatSysLaunchButton_Click(object sender, RoutedEventArgs e)
+        private async void VatSysLaunchButton_Click(object sender, RoutedEventArgs e)
         {
             if (Settings == null || string.IsNullOrWhiteSpace(Settings.BaseDirectory)) return;
             if (!File.Exists(VatsysExe))
@@ -612,6 +618,7 @@ namespace vatSysManager
                 }
                 return;
             }
+            await UpdateAll();
             Process.Start(VatsysExe);
             Environment.Exit(1);
         }
@@ -811,7 +818,7 @@ namespace vatSysManager
             PluginsButton_Click(null, null);
         }
 
-        private async void UpdaterAction(string code)
+        private async Task UpdaterAction(string code)
         {
             CurrentCommand = code;
 
