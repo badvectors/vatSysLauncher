@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Xml.Serialization;
+using vatSysLauncher;
 
 namespace vatSysManager
 {
@@ -41,8 +42,8 @@ namespace vatSysManager
         private static string VatsysExe => $"{Settings.BaseDirectory}\\bin\\vatSys.exe";
         private static string PluginsBaseDirectory => $"{Settings.BaseDirectory}\\bin\\Plugins";
         private static string ProfilesUrl => "https://vatsys.sawbe.com/downloads/data/emptyprofiles/profiles.json";
-        private static string PluginsUrl => "https://raw.githubusercontent.com/badvectors/vatSysManager/refs/heads/master/vatSysManager/Plugins.json";
-        private static string VersionUrl => "https://raw.githubusercontent.com/badvectors/vatSysManager/refs/heads/master/vatSysManager/Version.json";
+        private static string PluginsUrl => "https://raw.githubusercontent.com/badvectors/vatSysManager/refs/heads/master/vatSysLauncher/Plugins.json";
+        private static string VersionUrl => "https://raw.githubusercontent.com/badvectors/vatSysManager/refs/heads/master/vatSysLauncher/LauncherVersion.json";
         private static string PluginsBaseDirectoryName => "Base Directory";
 
         public MainWindow()
@@ -66,6 +67,8 @@ namespace vatSysManager
             SetupButton.IsEnabled = false;
             WaitTextBlock.Visibility = Visibility.Visible;
             LaunchButton.Visibility = Visibility.Hidden;
+
+            await CheckVersion();
 
             await InitProfiles();
 
@@ -98,11 +101,22 @@ namespace vatSysManager
 
             try
             {
-                var version = JsonConvert.DeserializeObject<Version>(content);
+                var version = JsonConvert.DeserializeObject<LauncherVersion>(content);
 
-                if (version == Version) return;
+                if (version.Version == Version.ToString()) return;
 
-
+                string messageBoxText = "You must update the installer to continue.";
+                string caption = "vatSys Launcher";
+                MessageBoxButton button = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Error;
+                MessageBoxResult result;
+                result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
+                switch (result)
+                {
+                    case MessageBoxResult.OK:
+                        break;
+                }
+                return;
             }
             catch { }
         }
@@ -173,7 +187,7 @@ namespace vatSysManager
             catch
             {
                 string messageBoxText = "You must grant administrator access to install plugins in the base directory.";
-                string caption = "vatSys Launder";
+                string caption = "vatSys Launcher";
                 MessageBoxButton button = MessageBoxButton.OK;
                 MessageBoxImage icon = MessageBoxImage.Error;
                 MessageBoxResult result;
