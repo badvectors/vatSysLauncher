@@ -26,5 +26,9 @@
   {
     "Name": "YuKitsune/vatsys-fullscreen-plugin",
     "DllName": "FullscreenPlugin.dll"
+  },
+  {
+    "Name": "alphadelta332/dti-window",
+    "DllName": "FullscreenPlugin.dll"
   }
 ]
