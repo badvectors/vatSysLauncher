@@ -22,5 +22,9 @@
   {
     "Name": "YuKitsune/vMaestro",
     "DllName": "Maestro.Plugin.dll"
+  },
+  {
+    "Name": "YuKitsune/vatsys-fullscreen-plugin",
+    "DllName": "FullscreenPlugin.dll"
   }
 ]
