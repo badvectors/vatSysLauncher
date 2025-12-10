@@ -29,6 +29,6 @@
   },
   {
     "Name": "alphadelta332/dti-window",
-    "DllName": "FullscreenPlugin.dll"
+    "DllName": "dti-window.dll"
   }
 ]
