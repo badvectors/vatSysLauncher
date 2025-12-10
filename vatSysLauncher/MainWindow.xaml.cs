@@ -160,7 +160,9 @@ namespace vatSysManager
         {
             UpdaterCanvasMode();
 
-            foreach (var code in Changes)
+            var toDo = Changes.ToList();
+
+            foreach (var code in toDo)
             {
                 var success = await UpdaterAction(code);
 
