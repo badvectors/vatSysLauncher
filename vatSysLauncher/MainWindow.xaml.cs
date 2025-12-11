@@ -30,7 +30,7 @@ namespace vatSysManager
         private static List<PluginResponse> PluginsAvailable = [];
         private static List<PluginInstalled> PluginsInstalled = [];
         private static List<string> Changes = [];
-        private static string CurrentCommand = null;
+        private static List<string> CurrentCommands = [];
 
         private static string SettingsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "vatSys Launcher");
         private static string SettingsFile => Path.Combine(SettingsFolder, "Settings.json");
@@ -59,8 +59,6 @@ namespace vatSysManager
 
             InitSettings();
 
-            await CheckForRestart();
-
             HomeButton_Click(null, null);
 
             HomeButton.IsEnabled = false;
@@ -75,6 +73,8 @@ namespace vatSysManager
             await InitProfiles();
 
             await InitPlugins();
+
+            await CheckForRestart();
 
             HomeButton.IsEnabled = true;
             PluginsButton.IsEnabled = true;
@@ -160,9 +160,9 @@ namespace vatSysManager
         {
             UpdaterCanvasMode();
 
-            var toDo = Changes.ToList();
+            CurrentCommands = Changes.ToList();
 
-            foreach (var code in toDo)
+            foreach (var code in CurrentCommands)
             {
                 var success = await UpdaterAction(code);
 
@@ -216,7 +216,7 @@ namespace vatSysManager
                 File.Delete(RestartFile);
             }
 
-            File.WriteAllText(RestartFile, CurrentCommand);
+            File.WriteAllLines(RestartFile, CurrentCommands);
 
             // Setting up start info of the new process of the same application
             ProcessStartInfo processStartInfo = new(Environment.ProcessPath)
@@ -266,11 +266,21 @@ namespace vatSysManager
         {
             if (!File.Exists(RestartFile)) return;
 
-            Changes = File.ReadAllLines(RestartFile).ToList();
+            CurrentCommands = [.. File.ReadAllLines(RestartFile)];
 
             UpdaterCanvasMode();
 
-            await UpdateAll();
+            foreach (var code in CurrentCommands)
+            {
+                var success = await UpdaterAction(code);
+            }
+
+            CurrentCommands.Clear();
+
+            if (File.Exists(RestartFile))
+            {
+                File.Delete(RestartFile);
+            }
         }
 
         private async Task InitPlugins()
@@ -828,13 +838,17 @@ namespace vatSysManager
 
             if (pluginResponse == null) return;
 
-            CurrentCommand = $"Install|Plugin|{pluginResponse.Name}|{location}";
+            var installCommand = $"Install|Plugin|{pluginResponse.Name}|{location}\\{pluginResponse.DirectoryName}";
+
+            CurrentCommands.Add(installCommand);
 
             var installTo = Path.Combine(location, pluginResponse.DirectoryName);
 
             var success = await RunPluginInstall(pluginResponse, installTo);
 
             if (!success) return;
+
+            CurrentCommands.Remove(installCommand);
 
             await InitPlugins();
 
@@ -843,7 +857,10 @@ namespace vatSysManager
 
         private async Task<bool> UpdaterAction(string code)
         {
-            CurrentCommand = code;
+            if (!CurrentCommands.Contains(code))
+            {
+                CurrentCommands.Add(code);
+            }
 
             var split = code.Split('|');
 
@@ -909,6 +926,7 @@ namespace vatSysManager
                 else if (split[1] == "Plugin")
                 {
                     //Install|Plugin|PluginName|directory
+                    //Install|Plugin|badvectors/SimulatorPlugin|C:\Program Files (x86)\vatSys\bin\Plugins
 
                     var pluginResponse = PluginsAvailable.FirstOrDefault(x => x.Name == split[2]);
 
@@ -917,6 +935,8 @@ namespace vatSysManager
                     var success = await RunPluginInstall(pluginResponse, split[3]);
 
                     if (!success) return false;
+
+                    // if success return to plugins screen
 
                     await InitPlugins();
 
@@ -976,7 +996,7 @@ namespace vatSysManager
                 }
             }
 
-            CurrentCommand = null;
+            CurrentCommands.Remove(code);
 
             if (File.Exists(RestartFile))
             {
@@ -1006,11 +1026,17 @@ namespace vatSysManager
 
                 var tagName = gitHubResponse.tag_name == "latest" ? gitHubResponse.name : gitHubResponse.tag_name;
 
-                tagName = tagName.Replace("Version", "");
-                tagName = tagName.Replace("v", "");
-                tagName = tagName.Trim();
+                var version = new Version(0, 0, 0);
 
-                var version = new Version(tagName);
+                try
+                {
+                    tagName = tagName.Replace("Version", "");
+                    tagName = tagName.Replace("v", "");
+                    tagName = tagName.Replace("-beta", "");
+                    tagName = tagName.Trim();
+                    version = new Version(tagName);
+                }
+                catch { }
 
                 pluginResponse.Version = version;
 
@@ -1273,9 +1299,20 @@ namespace vatSysManager
                 return result;
             }
 
-            string[] fileEntries = Directory.GetFiles(toDirectory);
+            var subdirectories = Directory.GetDirectories(toDirectory);
 
-            foreach (var file in fileEntries)
+            if (subdirectories.Length == 1 && Directory.GetFiles(toDirectory).Length == 0)
+            {
+                var files = Directory.GetFiles(subdirectories[0]);
+
+                foreach (var file in files)
+                {
+                    var fileName = file.Split("\\").Last();
+                    File.Move(file, Path.Combine(toDirectory, fileName));
+                }
+            }
+
+            foreach (var file in Directory.GetFiles(toDirectory))
             {
                 File.SetAttributes(file, FileAttributes.Normal);
             }
