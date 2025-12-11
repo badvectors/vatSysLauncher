@@ -1,6 +1,6 @@
 [Setup]
 AppName=vatSys Launcher
-AppVersion=1.15
+AppVersion=1.16
 AppVerName=vatSys Launcher
 DefaultDirName={autopf}\vatSys Launcher
 OutputBaseFilename=vatSys Launcher
@@ -9,7 +9,7 @@ SetupIconFile=icon.ico
 UninstallDisplayIcon={app}\icon.ico
 
 [Files]
-Source: "C:\Users\ajdun\source\repos\badvectors\vatSysManager\vatSysLauncher*"; DestDir: "{app}"
+Source: "*"; DestDir: "{app}"
 
 [Icons]
 Name: "{commondesktop}\vatSys Launcher"; Filename: "{app}\vatSysLauncher.exe"; IconFilename: "{app}\icon.ico"

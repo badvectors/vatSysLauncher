@@ -7,9 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <AssemblyVersion>1.15</AssemblyVersion>
-    <Version>1.15</Version>
-    <FileVersion>1.15</FileVersion>
+    <AssemblyVersion>1.16</AssemblyVersion>
+    <Version>1.16</Version>
+    <FileVersion>1.16</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
