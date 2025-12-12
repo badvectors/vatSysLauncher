@@ -1,4 +1,4 @@
-﻿namespace vatSysLauncher
+﻿namespace vatSysLauncher.Models
 {
     public class LauncherVersion
     {
