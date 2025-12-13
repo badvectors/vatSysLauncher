@@ -67,6 +67,8 @@ namespace vatSysLauncher.Controllers
         {
             var split = command.Split('|');
 
+            var success = false;
+
             if (split[0] == "Delete")
             {
                 if (split[1] == "Profile")
@@ -75,31 +77,17 @@ namespace vatSysLauncher.Controllers
 
                     var directory = Path.Combine(Launcher.Settings.ProfileDirectory, split[2]);
 
-                    var success = RunDelete(directory);
+                    success = RunDelete(directory);
 
                     if (!success) return false;
-
-                    // if success return to profile screen
-
-                    await Profiles.Init();
-
-                    await Plugins.Init();
-
-                    Launcher.SetCanvas("Profiles");
                 }
                 else if (split[1] == "Plugin")
                 {
                     // delete directory
 
-                    var success = RunDelete(split[3]);
+                    success = RunDelete(split[3]);
 
                     if (!success) return false;
-
-                    // if success return to profile screen
-
-                    await Plugins.Init();
-
-                    Launcher.SetCanvas("Plugins");
                 }
             }
             else if (split[0] == "Install")
@@ -114,17 +102,9 @@ namespace vatSysLauncher.Controllers
 
                     if (Path.Exists(directory)) return false;
 
-                    var success = await RunProfileInstall(profileOption);
+                    success = await RunProfileInstall(profileOption);
 
                     if (!success) return false;
-
-                    // if success return to profile screen
-
-                    await Profiles.Init();
-
-                    await Plugins.Init();
-
-                    Launcher.SetCanvas("Profiles");
                 }
                 else if (split[1] == "Plugin")
                 {
@@ -135,15 +115,7 @@ namespace vatSysLauncher.Controllers
 
                     if (pluginResponse == null) return false;
 
-                    var success = await RunPluginInstall(pluginResponse, split[3]);
-
-                    if (!success) return false;
-
-                    // if success return to plugins screen
-
-                    await Plugins.Init();
-
-                    Launcher.SetCanvas("Plugins");
+                    success = await RunPluginInstall(pluginResponse, split[3]);
                 }
 
             }
@@ -159,21 +131,13 @@ namespace vatSysLauncher.Controllers
 
                     if (!Path.Exists(directory)) return false;
 
-                    var success = RunDelete(directory);
+                    success = RunDelete(directory);
 
                     if (!success) return false;
 
                     success = await RunProfileInstall(profileOption);
 
                     if (!success) return false;
-
-                    // if success return to profile screen
-
-                    await Profiles.Init();
-
-                    await Plugins.Init();
-
-                    Launcher.SetCanvas("Profiles");
                 }
                 else if (split[1] == "Plugin")
                 {
@@ -181,7 +145,7 @@ namespace vatSysLauncher.Controllers
 
                     // delete directory
 
-                    var success = RunDelete(split[3]);
+                    success = RunDelete(split[3]);
 
                     if (!success) return false;
 
@@ -192,15 +156,29 @@ namespace vatSysLauncher.Controllers
                     success = await RunPluginInstall(pluginResponse, split[3]);
 
                     if (!success) return false;
-
-                    await Plugins.Init();
-
-                    Launcher.SetCanvas("Plugins");
                 }
             }
 
             CurrentCommands.Remove(command);
 
+            if (CurrentCommands.Count == 0)
+            {
+                await Profiles.Init();
+
+                await Plugins.Init();
+
+                Launcher.GetChanges();
+
+                if (split[1] == "Profile")
+                {
+                    Launcher.SetCanvas("Profiles");
+                }
+                else if (split[1] == "Plugin")
+                {
+                    Launcher.SetCanvas("Plugins");
+
+                }
+            }
             return true;
         }
 
