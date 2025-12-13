@@ -1,4 +1,4 @@
-﻿namespace vatSysManager
+﻿namespace vatSysLauncher.Models
 {
     public class PluginInstalled(string title, string profile, string localDirectory, Version currentVersion, Version localVersion)
     {

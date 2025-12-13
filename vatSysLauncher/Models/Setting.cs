@@ -1,6 +1,6 @@
-﻿namespace vatSysManager
+﻿namespace vatSysLauncher.Models
 {
-    public class Settings
+    public class Setting
     {
         public string ProfileDirectory { get; set; }
         public string BaseDirectory { get; set; }

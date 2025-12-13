@@ -1,4 +1,4 @@
-﻿namespace vatSysManager
+﻿namespace vatSysLauncher.Models
 {
     public class PluginResponse
     {

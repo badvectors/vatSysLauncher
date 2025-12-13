@@ -1,4 +1,4 @@
-﻿namespace vatSysManager
+﻿namespace vatSysLauncher.Models
 {
     public class ProfileOption(string title, string url, bool installed = false)
     {

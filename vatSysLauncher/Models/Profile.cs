@@ -1,11 +1,11 @@
-﻿namespace vatSysManager
+﻿namespace vatSysLauncher.Models
 {
     // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "", IsNullable = false)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
+    [System.Xml.Serialization.XmlRoot(Namespace = "", IsNullable = false)]
     public partial class Profile
     {
 
@@ -22,11 +22,11 @@
         {
             get
             {
-                return this.versionField;
+                return versionField;
             }
             set
             {
-                this.versionField = value;
+                versionField = value;
             }
         }
 
@@ -35,47 +35,47 @@
         {
             get
             {
-                return this.serversField;
+                return serversField;
             }
             set
             {
-                this.serversField = value;
+                serversField = value;
             }
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string Name
         {
             get
             {
-                return this.nameField;
+                return nameField;
             }
             set
             {
-                this.nameField = value;
+                nameField = value;
             }
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string FullName
         {
             get
             {
-                return this.fullNameField;
+                return fullNameField;
             }
             set
             {
-                this.fullNameField = value;
+                fullNameField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
     public partial class ProfileVersion
     {
 
@@ -88,66 +88,66 @@
         private string updateURLField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string AIRAC
         {
             get
             {
-                return this.aIRACField;
+                return aIRACField;
             }
             set
             {
-                this.aIRACField = value;
+                aIRACField = value;
             }
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string Revision
         {
             get
             {
-                return this.revisionField;
+                return revisionField;
             }
             set
             {
-                this.revisionField = value;
+                revisionField = value;
             }
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public uint PublishDate
         {
             get
             {
-                return this.publishDateField;
+                return publishDateField;
             }
             set
             {
-                this.publishDateField = value;
+                publishDateField = value;
             }
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string UpdateURL
         {
             get
             {
-                return this.updateURLField;
+                return updateURLField;
             }
             set
             {
-                this.updateURLField = value;
+                updateURLField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
     public partial class ProfileServers
     {
 
@@ -166,11 +166,11 @@
         {
             get
             {
-                return this.vATSIMStatusField;
+                return vATSIMStatusField;
             }
             set
             {
-                this.vATSIMStatusField = value;
+                vATSIMStatusField = value;
             }
         }
 
@@ -179,11 +179,11 @@
         {
             get
             {
-                return this.gRIBField;
+                return gRIBField;
             }
             set
             {
-                this.gRIBField = value;
+                gRIBField = value;
             }
         }
 
@@ -192,11 +192,11 @@
         {
             get
             {
-                return this.g2GField;
+                return g2GField;
             }
             set
             {
-                this.g2GField = value;
+                g2GField = value;
             }
         }
 
@@ -205,11 +205,11 @@
         {
             get
             {
-                return this.sweatBoxField;
+                return sweatBoxField;
             }
             set
             {
-                this.sweatBoxField = value;
+                sweatBoxField = value;
             }
         }
 
@@ -218,67 +218,67 @@
         {
             get
             {
-                return this.sweatBox2Field;
+                return sweatBox2Field;
             }
             set
             {
-                this.sweatBox2Field = value;
+                sweatBox2Field = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
     public partial class ProfileServersVATSIMStatus
     {
 
         private string urlField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string url
         {
             get
             {
-                return this.urlField;
+                return urlField;
             }
             set
             {
-                this.urlField = value;
+                urlField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
     public partial class ProfileServersGRIB
     {
 
         private string urlField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string url
         {
             get
             {
-                return this.urlField;
+                return urlField;
             }
             set
             {
-                this.urlField = value;
+                urlField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
     public partial class ProfileServersG2G
     {
 
@@ -287,78 +287,78 @@
         private ushort portField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string url
         {
             get
             {
-                return this.urlField;
+                return urlField;
             }
             set
             {
-                this.urlField = value;
+                urlField = value;
             }
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public ushort port
         {
             get
             {
-                return this.portField;
+                return portField;
             }
             set
             {
-                this.portField = value;
+                portField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
     public partial class ProfileServersSweatBox
     {
 
         private string urlField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string url
         {
             get
             {
-                return this.urlField;
+                return urlField;
             }
             set
             {
-                this.urlField = value;
+                urlField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [Serializable()]
+    [System.ComponentModel.DesignerCategory("code")]
+    [System.Xml.Serialization.XmlType(AnonymousType = true)]
     public partial class ProfileServersSweatBox2
     {
 
         private string urlField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [System.Xml.Serialization.XmlAttribute()]
         public string url
         {
             get
             {
-                return this.urlField;
+                return urlField;
             }
             set
             {
-                this.urlField = value;
+                urlField = value;
             }
         }
     }

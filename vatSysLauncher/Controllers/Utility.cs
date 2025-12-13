@@ -1,12 +1,13 @@
-﻿using System.Diagnostics;
+﻿using Newtonsoft.Json;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Security.Principal;
 using System.Windows;
-using static vatSysManager.MainWindow;
+using vatSysLauncher.Models;
 
-namespace vatSysLauncher
+namespace vatSysLauncher.Controllers
 {
     public class Utility
     {
@@ -18,7 +19,7 @@ namespace vatSysLauncher
 
             if (Directory.Exists(directory))
             {
-                result.Log.Add($"Emptying directory: {directory}.");
+                result.Add($"Emptying directory: {directory}.");
 
                 try
                 {
@@ -33,13 +34,13 @@ namespace vatSysLauncher
                 {
                     RestartAsAdministrator();
 
-                    result.Log.Add($"Could not empty directory as administrator access was not provided");
+                    result.Add($"Could not empty directory as administrator access was not provided");
 
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    result.Log.Add($"Could not directory directory: {ex.Message}");
+                    result.Add($"Could not directory directory: {ex.Message}");
 
                     return result;
                 }
@@ -67,13 +68,13 @@ namespace vatSysLauncher
             {
                 RestartAsAdministrator();
 
-                result.Log.Add($"Could not create directory as administrator access was not provided");
+                result.Add($"Could not create directory as administrator access was not provided");
 
                 return result;
             }
             catch (Exception ex)
             {
-                result.Log.Add($"Could not create directory: {ex.Message}");
+                result.Add($"Could not create directory: {ex.Message}");
 
                 return result;
             }
@@ -89,7 +90,7 @@ namespace vatSysLauncher
 
             if (Directory.Exists(directory))
             {
-                result.Log.Add($"Deleting directory: {directory}");
+                result.Add($"Deleting directory: {directory}");
 
                 try
                 {
@@ -103,13 +104,13 @@ namespace vatSysLauncher
                 {
                     RestartAsAdministrator();
 
-                    result.Log.Add($"Could not delete directory as administrator access was not provided");
+                    result.Add($"Could not delete directory as administrator access was not provided");
 
                     return result;
                 }
                 catch (Exception ex)
                 {
-                    result.Log.Add($"Could not delete directory: {ex.Message}");
+                    result.Add($"Could not delete directory: {ex.Message}");
 
                     return result;
                 }
@@ -124,7 +125,7 @@ namespace vatSysLauncher
         {
             var result = new UpdaterResult();
 
-            result.Log.Add("Extracting plugin.");
+            result.Add("Extracting plugin.");
 
             try
             {
@@ -132,11 +133,11 @@ namespace vatSysLauncher
             }
             catch (Exception ex)
             {
-                result.Log.Add($"Could not extract file: {ex.Message}");
+                result.Add($"Could not extract file: {ex.Message}");
 
                 if (ex.InnerException != null)
                 {
-                    result.Log.Add($"-> {ex.InnerException.Message}");
+                    result.Add($"-> {ex.InnerException.Message}");
                 }
 
                 return result;
@@ -160,7 +161,7 @@ namespace vatSysLauncher
                 File.SetAttributes(file, FileAttributes.Normal);
             }
 
-            result.Log.Add("Extract completed.");
+            result.Add("Extract completed.");
 
             result.Success = true;
 
@@ -173,30 +174,30 @@ namespace vatSysLauncher
 
             if (string.IsNullOrWhiteSpace(url))
             {
-                result.Log.Add("No download link was found.");
+                result.Add("No download link was found.");
 
                 return result;
             }
 
-            result.Log.Add($"Downloading from: {url}.");
+            result.Add($"Downloading from: {url}.");
 
             using (var downloadResponse = await HttpClient.GetAsync(url))
             {
                 if (!downloadResponse.IsSuccessStatusCode)
                 {
-                    result.Log.Add($"Could not download file: {downloadResponse.StatusCode}.");
+                    result.Add($"Could not download file: {downloadResponse.StatusCode}.");
 
                     return result;
                 }
 
                 using (var stream = await downloadResponse.Content.ReadAsStreamAsync())
-                using (var file = File.OpenWrite(Path.Combine(Constants.WorkingDirectory, name)))
+                using (var file = File.OpenWrite(Path.Combine(Launcher.WorkingDirectory, name)))
                 {
                     stream.CopyTo(file);
                 }
             }
 
-            result.Log.Add("Download completed.");
+            result.Add("Download completed.");
 
             result.Success = true;
 
@@ -219,12 +220,12 @@ namespace vatSysLauncher
         {
             if (IsRunningAsAdministrator()) return;
 
-            if (File.Exists(Constants.RestartFile))
+            if (File.Exists(Launcher.RestartFile))
             {
-                File.Delete(Constants.RestartFile);
+                File.Delete(Launcher.RestartFile);
             }
 
-            File.WriteAllLines(Constants.RestartFile, Constants.CurrentCommands);
+            File.WriteAllLines(Launcher.RestartFile, Updater.GetCurrentCommands());
 
             // Setting up start info of the new process of the same application
             ProcessStartInfo processStartInfo = new(Environment.ProcessPath)
@@ -271,6 +272,44 @@ namespace vatSysLauncher
                 file.Attributes = FileAttributes.Normal;
             }
             dir.Attributes = FileAttributes.Normal;
+        }
+
+        public static string GetFileVersion()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            return fvi.FileVersion;
+        }
+
+        public static async Task CheckVersion()
+        {
+            var versionResponse = await Launcher.HttpClient.GetAsync(Launcher.VersionUrl);
+
+            if (!versionResponse.IsSuccessStatusCode) return;
+
+            var content = await versionResponse.Content.ReadAsStringAsync();
+
+            try
+            {
+                var version = JsonConvert.DeserializeObject<LauncherVersion>(content);
+
+                if (version.Version == GetFileVersion()) return;
+
+                string messageBoxText = $"You must update vatSys Launcher to version {version.Version} to continue.";
+                string caption = "vatSys Launcher";
+                MessageBoxButton button = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Exclamation;
+                MessageBoxResult result;
+                result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
+                switch (result)
+                {
+                    case MessageBoxResult.OK:
+                        await Updater.UpdateSelf(version.DownloadUrl);
+                        break;
+                }
+                return;
+            }
+            catch { }
         }
     }
 }
