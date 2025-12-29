@@ -31,8 +31,8 @@ jobs:
     - name: Build and push Docker Image
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: ./vatSysLauncher.Web/Dockerfile
+        context: ./vatSysLauncher.Web/
+        file: Dockerfile
         push: true
         tags: ${{ env.IMAGE_URL }}
 
