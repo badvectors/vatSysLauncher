@@ -2,10 +2,6 @@ name: Build and Deploy Docker Image
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
   build_and_deploy:
