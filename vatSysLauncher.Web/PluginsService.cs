@@ -5,7 +5,7 @@ namespace vatSysLauncher.Web
 {
     public interface IPluginService
     {
-        List<PluginResponse> Get();
+        Task<List<PluginResponse>> Get();
         DateTime LastRefresh();
         Task Update();
     }
@@ -16,10 +16,27 @@ namespace vatSysLauncher.Web
 
         private static HttpClient _httpClient = new();
         private static DateTime _lastRefresh = DateTime.MinValue;
+        private static TimeSpan _refreshTime = TimeSpan.FromMinutes(15);
         private static List<PluginResponse> _plugins = [];
 
-        public List<PluginResponse> Get() => _plugins;
+        public async Task<List<PluginResponse>> Get()
+        {
+            if (ShouldUpdate())
+            {
+                await Update();
+            }
+            return _plugins;
+        }
         public DateTime LastRefresh() => _lastRefresh;
+
+        private bool ShouldUpdate()
+        {
+            if (_plugins.Count == 0) return true;
+
+            if (_lastRefresh.Add(_refreshTime) < DateTime.UtcNow) return true;
+
+            return false;
+        }
 
         public async Task Update()
         {

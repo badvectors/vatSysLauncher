@@ -9,9 +9,9 @@ namespace vatSysLauncher.Web.Controllers
         private readonly IPluginService _pluginService = pluginService;
 
         [HttpGet]
-        public List<PluginResponse> Get()
+        public async Task<List<PluginResponse>> Get()
         {
-            return _pluginService.Get();
+            return await _pluginService.Get();
         }
 
         [HttpGet, Route("LastUpdate")]
