@@ -105,11 +105,15 @@ namespace vatSysLauncher.Web
             }
 
             // Remove any deleted plugins.
-            foreach (var plugin in current.ToList())
+            if (available.Count != 0)
             {
-                if (available.Any(x => x.Name == plugin.Name)) continue;
+                foreach (var plugin in current.ToList())
+                {
+                    if (available.Any(x => x.Name == plugin.Name)) continue;
 
-                current.Remove(plugin);
+                    current.Remove(plugin);
+                }
+
             }
 
             // Get versions.
