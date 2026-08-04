@@ -132,7 +132,9 @@ namespace vatSysLauncher.Controllers
                     }
                     catch { }
 
-                    plugins.Add(new PluginInstalled(pluginAvailable.Name, Launcher.PluginsBaseDirectoryName, dir, pluginAvailable.Version, localVersion, pluginAvailable.Remove));
+                    var remove = pluginAvailable.Remove || pluginAvailable.PreventBaseInstall;
+
+                    plugins.Add(new PluginInstalled(pluginAvailable.Name, Launcher.PluginsBaseDirectoryName, dir, pluginAvailable.Version, localVersion, remove));
 
                     break;
                 }

@@ -29,18 +29,24 @@ namespace vatSysLauncher.Views
 
             if (location == null || pluginName == null) return;
 
+            var pluginResponse = Launcher.PluginsAvailable.FirstOrDefault(x => x.Name == pluginName);
+
+            if (pluginResponse == null) return;
+
             if (location == Launcher.PluginsBaseDirectoryName)
             {
+                if (pluginResponse.PreventBaseInstall)
+                {
+                    MessageBox.Show($"{pluginResponse.Name} cannot be installed into '{Launcher.PluginsBaseDirectoryName}'. Install it into a specific profile instead.", "vatSys Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 location = Launcher.PluginsBaseDirectory;
             }
             else
             {
                 location = $"{Launcher.Settings.ProfileDirectory}\\{location}\\Plugins";
             }
-
-            var pluginResponse = Launcher.PluginsAvailable.FirstOrDefault(x => x.Name == pluginName);
-
-            if (pluginResponse == null) return;
 
             var installCommand = $"Install|Plugin|{pluginResponse.Name}|{location}\\{pluginResponse.DirectoryName}";
 

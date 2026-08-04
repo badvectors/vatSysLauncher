@@ -1,6 +1,6 @@
 [Setup]
 AppName=vatSys Launcher
-AppVersion=1.23
+AppVersion=1.24
 AppVerName=vatSys Launcher
 DefaultDirName={autopf}\vatSys Launcher
 OutputBaseFilename=vatSys Launcher
