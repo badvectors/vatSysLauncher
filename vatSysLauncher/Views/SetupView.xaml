@@ -1,0 +1,18 @@
+<UserControl x:Class="vatSysLauncher.Views.SetupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <Canvas>
+        <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="Setup" Canvas.Top="10" FontWeight="Bold" FontSize="20" FontFamily="Terminus (TTF)"/>
+        <TextBox x:Name="BaseDirectoryTextBox" Text="{Binding BaseDirectory, Mode=OneWay}" Canvas.Left="10" TextWrapping="Wrap" Canvas.Top="71" Width="500" Height="26" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="13" FontFamily="Terminus (TTF)"/>
+        <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="Base Directory" Canvas.Top="50" FontSize="13" FontFamily="Terminus (TTF)"/>
+        <TextBox x:Name="ProfileDirectoryTextBox" Text="{Binding ProfileDirectory, Mode=OneWay}" Canvas.Left="10" TextWrapping="Wrap" Canvas.Top="134" Width="500" Height="26" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="13" FontFamily="Terminus (TTF)"/>
+        <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="Profile Directory" Canvas.Top="113" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="13" FontFamily="Terminus (TTF)"/>
+        <Button Content="Change" Canvas.Left="530" Canvas.Top="71" Height="26" Width="80" Click="BaseDirectoryButton_Click" FontSize="13" FontFamily="Terminus (TTF)"/>
+        <Button Content="Change" Canvas.Left="530" Canvas.Top="134" Height="26" Width="80" HorizontalAlignment="Center" VerticalAlignment="Top" Click="ProfileDirectoryButton_Click" FontSize="13" FontFamily="Terminus (TTF)"/>
+        <TextBlock Canvas.Left="30" TextWrapping="Wrap" Text="Include Development Plugins" Canvas.Top="180" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="13" FontFamily="Terminus (TTF)"/>
+        <CheckBox x:Name="DevelopmentCheckBox" IsChecked="{Binding IncludeDevelopment, Mode=OneTime}" Canvas.Left="10" Canvas.Top="179" Checked="DevelopmentCheckBox_Checked" Unchecked="DevelopmentCheckBox_Unchecked" />
+    </Canvas>
+</UserControl>

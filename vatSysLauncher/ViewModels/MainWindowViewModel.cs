@@ -78,35 +78,18 @@ namespace vatSysLauncher.ViewModels
             }
         }
 
-        // Init
+        // Current view
 
-        private Visibility _initCanvas;
+        private object _currentView;
 
-        public Visibility InitCanvas
+        public object CurrentView
         {
-            get { return _initCanvas; }
+            get { return _currentView; }
             set
             {
-                if (_initCanvas != value)
+                if (_currentView != value)
                 {
-                    _initCanvas = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        // Home
-
-        private Visibility _homeCanvas;
-
-        public Visibility HomeCanvas
-        {
-            get { return _homeCanvas; }
-            set
-            {
-                if (_homeCanvas != value)
-                {
-                    _homeCanvas = value;
+                    _currentView = value;
                     OnPropertyChanged();
                 }
             }
@@ -114,22 +97,9 @@ namespace vatSysLauncher.ViewModels
 
         // Profiles
 
-        private Visibility _profilesCanvas;
         private Visibility _profilesLoading;
         private List<ProfileOption> _profilesList = new();
 
-        public Visibility ProfilesCanvas
-        {
-            get { return _profilesCanvas; }
-            set
-            {
-                if (_profilesCanvas != value)
-                {
-                    _profilesCanvas = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
         public Visibility ProfilesLoading
         {
             get { return _profilesLoading; }
@@ -157,24 +127,11 @@ namespace vatSysLauncher.ViewModels
 
         // Plugins
 
-        private Visibility _pluginsCanvas;
         private Visibility _pluginsLoading;
         private List<PluginInstalled> _pluginsList;
         private List<string> _pluginsLocations = new();
         private List<string> _pluginsAvailable = new();
 
-        public Visibility PluginsCanvas
-        {
-            get { return _pluginsCanvas; }
-            set
-            {
-                if (_pluginsCanvas != value)
-                {
-                    _pluginsCanvas = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
         public Visibility PluginsLoading
         {
             get { return _pluginsLoading; }
@@ -226,21 +183,8 @@ namespace vatSysLauncher.ViewModels
 
         // Updater
 
-        private Visibility _updaterCanvas;
         private string _updaterLog;
 
-        public Visibility UpdaterCanvas
-        {
-            get { return _updaterCanvas; }
-            set
-            {
-                if (_updaterCanvas != value)
-                {
-                    _updaterCanvas = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
         public string UpdaterLog
         {
             get { return _updaterLog; }
@@ -256,20 +200,6 @@ namespace vatSysLauncher.ViewModels
 
         // Setup
 
-        private Visibility _setupCanvas;
-
-        public Visibility SetupCanvas
-        {
-            get { return _setupCanvas; }
-            set
-            {
-                if (_setupCanvas != value)
-                {
-                    _setupCanvas = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
         public string BaseDirectory => Launcher.Settings.BaseDirectory;
         public string ProfileDirectory => Launcher.Settings.ProfileDirectory;
         public bool IncludeDevelopment => Launcher.Settings.IncludeDevelopment;

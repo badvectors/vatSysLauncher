@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
 using vatSysLauncher.Models;
 
@@ -98,8 +99,7 @@ namespace vatSysLauncher.Controllers
 
                         try
                         {
-                            var versionInfo = FileVersionInfo.GetVersionInfo(file);
-                            localVersion = new Version(versionInfo.FileVersion);
+                            localVersion = GetLocalVersion(file);
                         }
                         catch { }
 
@@ -128,8 +128,7 @@ namespace vatSysLauncher.Controllers
 
                     try
                     {
-                        var versionInfo = FileVersionInfo.GetVersionInfo(file);
-                        localVersion = new Version(versionInfo.FileVersion);
+                        localVersion = GetLocalVersion(file);
                     }
                     catch { }
 
@@ -140,6 +139,44 @@ namespace vatSysLauncher.Controllers
             }
 
             return plugins;
+        }
+
+        private static Version GetLocalVersion(string file)
+        {
+            var versionInfo = FileVersionInfo.GetVersionInfo(file);
+
+            var fileVersion = new Version(versionInfo.FileVersion);
+
+            var productVersion = ParseProductVersion(versionInfo.ProductVersion);
+
+            if (productVersion != null && productVersion > fileVersion)
+                return productVersion;
+
+            return fileVersion;
+        }
+
+        // Parses semver-style product versions (e.g. "1.0.0-beta.3+sha") into a
+        // System.Version by using the trailing pre-release number as the revision,
+        // so "1.0.0-beta.3+sha" becomes 1.0.0.3.
+        private static Version ParseProductVersion(string productVersion)
+        {
+            if (string.IsNullOrWhiteSpace(productVersion)) return null;
+
+            var withoutMetadata = productVersion.Split('+')[0];
+
+            var parts = withoutMetadata.Split(['-'], 2);
+
+            if (!Version.TryParse(parts[0], out var version)) return null;
+
+            if (parts.Length > 1)
+            {
+                var match = Regex.Match(parts[1], @"\d+(?!.*\d)");
+
+                if (match.Success && int.TryParse(match.Value, out var revision))
+                    return new Version(version.Major, version.Minor, Math.Max(version.Build, 0), revision);
+            }
+
+            return version;
         }
     }
 }

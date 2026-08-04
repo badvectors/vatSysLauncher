@@ -1,0 +1,11 @@
+<UserControl x:Class="vatSysLauncher.Views.InitView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <Canvas>
+        <TextBlock Canvas.Left="90" TextWrapping="Wrap" Text="You must close vatSys to continue." Canvas.Top="140" Width="450" VerticalAlignment="Top" HorizontalAlignment="Left" TextAlignment="Center" FontWeight="Bold" FontSize="20" FontFamily="Terminus (TTF)"/>
+        <Button x:Name="CloseButton" Content="Close vatSys" Height="43" Width="600" Canvas.Left="10" Canvas.Top="175" Click="VatSysCloseButton_Click" HorizontalAlignment="Left" VerticalAlignment="Center" Background="#FFED8181" FontSize="16" FontFamily="Terminus (TTF)"/>
+    </Canvas>
+</UserControl>

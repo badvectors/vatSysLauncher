@@ -3,12 +3,20 @@ using System.Net.Http;
 using System.Windows;
 using vatSysLauncher.Models;
 using vatSysLauncher.ViewModels;
+using vatSysLauncher.Views;
 
 namespace vatSysLauncher.Controllers
 {
     public class Launcher
     {
         public static MainWindowViewModel MainViewModel { get; set; } = new MainWindowViewModel();
+
+        private static readonly SetupView SetupView = new();
+        private static readonly InitView InitView = new();
+        private static readonly HomeView HomeView = new();
+        private static readonly ProfilesView ProfilesView = new();
+        private static readonly UpdaterView UpdaterView = new();
+        private static readonly PluginsView PluginsView = new();
         public static readonly HttpClient HttpClient = new();
         public static Setting Settings = null;
         public static List<string> Changes = [];
@@ -52,38 +60,18 @@ namespace vatSysLauncher.Controllers
 
         public static void SetCanvas(string canvasName)
         {
-            MainViewModel.SetupCanvas = Visibility.Hidden;
-            MainViewModel.InitCanvas = Visibility.Hidden;
-            MainViewModel.HomeCanvas = Visibility.Hidden;
-            MainViewModel.ProfilesCanvas = Visibility.Hidden;
-            MainViewModel.UpdaterCanvas = Visibility.Hidden;
-            MainViewModel.PluginsCanvas = Visibility.Hidden;
-
             CurrentCanvas = canvasName;
 
-            switch (canvasName)
+            MainViewModel.CurrentView = canvasName switch
             {
-                case "Setup":
-                    MainViewModel.SetupCanvas = Visibility.Visible;
-                    break;
-                case "Init":
-                    MainViewModel.InitCanvas = Visibility.Visible;
-                    break;
-                case "Home":
-                    MainViewModel.HomeCanvas = Visibility.Visible;
-                    break;
-                case "Profiles":
-                    MainViewModel.ProfilesCanvas = Visibility.Visible;
-                    break;
-                case "Updater":
-                    MainViewModel.UpdaterCanvas = Visibility.Visible;
-                    break;
-                case "Plugins":
-                    MainViewModel.PluginsCanvas = Visibility.Visible;
-                    break;
-                default:
-                    break;
-            }
+                "Setup" => SetupView,
+                "Init" => InitView,
+                "Home" => HomeView,
+                "Profiles" => ProfilesView,
+                "Updater" => UpdaterView,
+                "Plugins" => PluginsView,
+                _ => MainViewModel.CurrentView
+            };
         }
 
         public static void GetChanges()
