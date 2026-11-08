@@ -131,11 +131,17 @@ namespace vatSysLauncher.Controllers
 
                     if (!Path.Exists(directory)) return false;
 
+                    // download first so a failed download doesn't leave the profile deleted
+
+                    success = await RunDownload(profileOption.DownloadUrl);
+
+                    if (!success) return false;
+
                     success = RunDelete(directory);
 
                     if (!success) return false;
 
-                    success = await RunProfileInstall(profileOption);
+                    success = RunExtract(directory);
 
                     if (!success) return false;
                 }
@@ -143,17 +149,21 @@ namespace vatSysLauncher.Controllers
                 {
                     //Update|Plugin|PluginName|directory
 
-                    // delete directory
+                    var pluginResponse = Launcher.PluginsAvailable.FirstOrDefault(x => x.Name == split[2]);
+
+                    if (pluginResponse == null) return false;
+
+                    // download first so a failed download doesn't leave the plugin deleted
+
+                    success = await RunDownload(pluginResponse.DownloadUrl);
+
+                    if (!success) return false;
 
                     success = RunDelete(split[3]);
 
                     if (!success) return false;
 
-                    var pluginResponse = Launcher.PluginsAvailable.FirstOrDefault(x => x.Name == split[2]);
-
-                    if (pluginResponse == null) return false;
-
-                    success = await RunPluginInstall(pluginResponse, split[3]);
+                    success = RunExtract(split[3]);
 
                     if (!success) return false;
                 }
@@ -196,74 +206,58 @@ namespace vatSysLauncher.Controllers
         }
 
 
-        private static async Task<bool> RunPluginInstall(PluginResponse pluginResponse, string installTo, string name = "Temp.zip")
+        private const string DownloadName = "Temp.zip";
+
+        private static string DownloadPath => Path.Combine(Launcher.WorkingDirectory, DownloadName);
+
+        private static async Task<bool> RunPluginInstall(PluginResponse pluginResponse, string installTo)
         {
-            // create working directory
+            if (!await RunDownload(pluginResponse.DownloadUrl)) return false;
+
+            return RunExtract(installTo);
+        }
+
+        private static async Task<bool> RunProfileInstall(ProfileOption profileOption)
+        {
+            if (!await RunDownload(profileOption.DownloadUrl)) return false;
+
+            return RunExtract(Path.Combine(Launcher.Settings.ProfileDirectory, profileOption.Title));
+        }
+
+        private static async Task<bool> RunDownload(string url)
+        {
+            // create (or empty) working directory
 
             var workingResult = Utility.CreateDirectory(Launcher.WorkingDirectory);
 
             if (!workingResult.Success) return false;
 
-            // download plugin
+            // download file
 
-            var downloadResult = await Utility.DownloadFile(pluginResponse.DownloadUrl);
+            var downloadResult = await Utility.DownloadFile(url, DownloadName);
 
-            if (!downloadResult.Success) return false;
+            return downloadResult.Success;
+        }
 
+        private static bool RunExtract(string installTo)
+        {
             // create directory
 
             var directoryResult = Utility.CreateDirectory(installTo);
 
             if (!directoryResult.Success) return false;
 
-            // extract profile
+            // extract
 
-            var extractResult = Utility.ExtractZip(Path.Combine(Launcher.WorkingDirectory, name), installTo);
-
-            if (!extractResult.Success) return false;
-
-            // delete downloaded file
-
-            var deleteResult = Utility.DeleteFile(Path.Combine(Launcher.WorkingDirectory, name));
-
-            if (!deleteResult.Success) return false;
-
-            return true;
-        }
-
-        private static async Task<bool> RunProfileInstall(ProfileOption profileOption)
-        {
-            // create working directory
-
-            var workingResult = Utility.CreateDirectory(Launcher.WorkingDirectory);
-
-            if (!workingResult.Success) return false;
-
-            // download plugin
-
-            var downloadResult = await Utility.DownloadFile(profileOption.DownloadUrl);
-
-            if (!downloadResult.Success) return false;
-
-            // create directory
-
-            var directoryResult = Utility.CreateDirectory(Path.Combine(Launcher.Settings.ProfileDirectory, profileOption.Title));
-
-            if (!directoryResult.Success) return false;
-
-            // extract profile
-
-            var extractResult = Utility.ExtractZip(Path.Combine(Launcher.WorkingDirectory, "Temp.zip"), Path.Combine(Launcher.Settings.ProfileDirectory, profileOption.Title));
+            var extractResult = Utility.ExtractZip(DownloadPath, installTo);
 
             if (!extractResult.Success) return false;
 
             // delete downloaded file
 
-            var deleteResult = Utility.DeleteFile(Path.Combine(Launcher.WorkingDirectory, "Temp.zip"));
+            var deleteResult = Utility.DeleteFile(DownloadPath);
 
-            if (!deleteResult.Success) return false;
-
-            return true;
+            return deleteResult.Success;
         }
 
         public static async Task<bool> UpdateSelf(string url)

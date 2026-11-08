@@ -11,7 +11,15 @@ namespace vatSysLauncher.Controllers
 {
     public class Utility
     {
-        private static readonly HttpClient HttpClient = new();
+        private static readonly HttpClient HttpClient = CreateHttpClient();
+
+        private static HttpClient CreateHttpClient()
+        {
+            var client = new HttpClient();
+            // api.github.com rejects requests without a User-Agent.
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("vatSysLauncher");
+            return client;
+        }
 
         public static UpdaterResult EmptyDirectory(string directory)
         {
@@ -210,20 +218,54 @@ namespace vatSysLauncher.Controllers
 
             result.Add($"Downloading from: {url}.");
 
-            using (var downloadResponse = await HttpClient.GetAsync(url))
-            {
-                if (!downloadResponse.IsSuccessStatusCode)
-                {
-                    result.Add($"Could not download file: {downloadResponse.StatusCode}.");
+            var path = Path.Combine(Launcher.WorkingDirectory, name);
 
+            try
+            {
+                using var downloadResponse = await HttpClient.GetAsync(url);
+
+                if (downloadResponse.IsSuccessStatusCode)
+                {
+                    await SaveResponse(downloadResponse, path);
+
+                    result.Add("Download completed.");
+                    result.Success = true;
                     return result;
                 }
 
-                using (var stream = await downloadResponse.Content.ReadAsStreamAsync())
-                using (var file = File.OpenWrite(Path.Combine(Launcher.WorkingDirectory, name)))
+                result.Add($"Could not download file: {downloadResponse.StatusCode}.");
+            }
+            catch (Exception ex)
+            {
+                result.Add($"Could not download file: {ex.Message}");
+            }
+
+            // github.com release links sometimes fail (e.g. 504 from GitHub's edge) while the API still works.
+            var apiUrl = await GetGitHubApiAssetUrl(url);
+
+            if (apiUrl == null) return result;
+
+            result.Add("Retrying via the GitHub API.");
+
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+                request.Headers.Accept.ParseAdd("application/octet-stream");
+
+                using var apiResponse = await HttpClient.SendAsync(request);
+
+                if (!apiResponse.IsSuccessStatusCode)
                 {
-                    stream.CopyTo(file);
+                    result.Add($"Could not download file: {apiResponse.StatusCode}.");
+                    return result;
                 }
+
+                await SaveResponse(apiResponse, path);
+            }
+            catch (Exception ex)
+            {
+                result.Add($"Could not download file: {ex.Message}");
+                return result;
             }
 
             result.Add("Download completed.");
@@ -231,6 +273,42 @@ namespace vatSysLauncher.Controllers
             result.Success = true;
 
             return result;
+        }
+
+        private static async Task SaveResponse(HttpResponseMessage response, string path)
+        {
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var file = File.Create(path);
+            await stream.CopyToAsync(file);
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex GitHubReleaseRegex =
+            new(@"^https://github\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/([^/?#]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        private static async Task<string> GetGitHubApiAssetUrl(string url)
+        {
+            var match = GitHubReleaseRegex.Match(url);
+
+            if (!match.Success) return null;
+
+            var (owner, repo, tag, asset) = (match.Groups[1].Value, match.Groups[2].Value, Uri.UnescapeDataString(match.Groups[3].Value), Uri.UnescapeDataString(match.Groups[4].Value));
+
+            try
+            {
+                using var response = await HttpClient.GetAsync($"https://api.github.com/repos/{owner}/{repo}/releases/tags/{Uri.EscapeDataString(tag)}");
+
+                if (!response.IsSuccessStatusCode) return null;
+
+                var release = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(await response.Content.ReadAsStringAsync());
+
+                var match2 = release?["assets"]?.FirstOrDefault(a => string.Equals((string)a["name"], asset, StringComparison.OrdinalIgnoreCase));
+
+                return (string)match2?["url"];
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public static bool IsRunningAsAdministrator()
