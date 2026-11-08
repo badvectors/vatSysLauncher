@@ -4,7 +4,7 @@ AppVersion=1.25
 AppVerName=vatSys Launcher
 DefaultDirName={autopf}\vatSys Launcher
 OutputBaseFilename=vatSys Launcher
-SourceDir=C:\Users\ajdun\RiderProjects\vatSysLauncher\vatSysLauncher\bin\Release\net9.0-windows\
+SourceDir=C:\Users\ajdun\source\repos\vatSysLauncher\vatSysLauncher\bin\Release\net9.0-windows\
 SetupIconFile=icon.ico
 UninstallDisplayIcon={app}\icon.ico
 
