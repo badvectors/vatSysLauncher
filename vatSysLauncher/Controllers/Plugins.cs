@@ -45,13 +45,25 @@ namespace vatSysLauncher.Controllers
         {
             var plugins = new List<PluginResponse>();
 
-            var response = await Launcher.HttpClient.GetAsync(Launcher.PluginsUrl);
+            List<PluginResponse> pluginResponses;
 
-            if (!response.IsSuccessStatusCode) return plugins;
+            try
+            {
+                using var response = await Launcher.HttpClient.GetAsync(Launcher.PluginsUrl);
 
-            var content = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode) return plugins;
 
-            var pluginResponses = JsonConvert.DeserializeObject<List<PluginResponse>>(content);
+                var content = await response.Content.ReadAsStringAsync();
+
+                pluginResponses = JsonConvert.DeserializeObject<List<PluginResponse>>(content);
+            }
+            catch
+            {
+                // plugin server unreachable (DNS, offline, timeout) or bad JSON - carry on with no plugins
+                return plugins;
+            }
+
+            if (pluginResponses == null) return plugins;
 
             foreach (var pluginResponse in pluginResponses)
             {

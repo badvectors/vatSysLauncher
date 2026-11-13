@@ -55,13 +55,25 @@ namespace vatSysLauncher.Controllers
         {
             var profiles = new List<ProfileOption>();
 
-            var response = await Launcher.HttpClient.GetAsync(Launcher.ProfilesUrl);
+            List<ProfilesResponse> available;
 
-            if (!response.IsSuccessStatusCode) return profiles;
+            try
+            {
+                using var response = await Launcher.HttpClient.GetAsync(Launcher.ProfilesUrl);
 
-            var responseString = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode) return profiles;
 
-            var available = JsonConvert.DeserializeObject<List<ProfilesResponse>>(responseString);
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                available = JsonConvert.DeserializeObject<List<ProfilesResponse>>(responseString);
+            }
+            catch
+            {
+                // profile server unreachable (DNS, offline, timeout) or bad JSON - carry on with installed profiles only
+                return profiles;
+            }
+
+            if (available == null) return profiles;
 
             foreach (var profile in available)
             {
@@ -69,11 +81,18 @@ namespace vatSysLauncher.Controllers
 
                 var profileFile = $"{profile.path}/Profile.xml";
 
-                var profileResponse = await Launcher.HttpClient.GetAsync(profileFile);
+                try
+                {
+                    using var profileResponse = await Launcher.HttpClient.GetAsync(profileFile);
 
-                var contents = await profileResponse.Content.ReadAsStringAsync();
+                    var contents = await profileResponse.Content.ReadAsStringAsync();
 
-                profileOption.CurrentVersion = GetVersion(contents);
+                    profileOption.CurrentVersion = GetVersion(contents);
+                }
+                catch
+                {
+                    profileOption.CurrentVersion = "ERROR";
+                }
 
                 profiles.Add(profileOption);
             }

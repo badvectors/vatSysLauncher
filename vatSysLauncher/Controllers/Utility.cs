@@ -220,59 +220,59 @@ namespace vatSysLauncher.Controllers
 
             var path = Path.Combine(Launcher.WorkingDirectory, name);
 
-            try
+            // GitHub release assets are downloaded through the GitHub API first;
+            // the direct github.com link is only used as a fallback.
+            var apiUrl = await GetGitHubApiAssetUrl(url);
+
+            if (apiUrl != null)
             {
-                using var downloadResponse = await HttpClient.GetAsync(url);
+                result.Add("Downloading via the GitHub API.");
 
-                if (downloadResponse.IsSuccessStatusCode)
+                using var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+                request.Headers.Accept.ParseAdd("application/octet-stream");
+
+                if (await TryDownload(request, path, result))
                 {
-                    await SaveResponse(downloadResponse, path);
-
                     result.Add("Download completed.");
                     result.Success = true;
                     return result;
                 }
 
-                result.Add($"Could not download file: {downloadResponse.StatusCode}.");
-            }
-            catch (Exception ex)
-            {
-                result.Add($"Could not download file: {ex.Message}");
+                result.Add("Retrying via the direct link.");
             }
 
-            // github.com release links sometimes fail (e.g. 504 from GitHub's edge) while the API still works.
-            var apiUrl = await GetGitHubApiAssetUrl(url);
+            using var directRequest = new HttpRequestMessage(HttpMethod.Get, url);
 
-            if (apiUrl == null) return result;
-
-            result.Add("Retrying via the GitHub API.");
-
-            try
-            {
-                using var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
-                request.Headers.Accept.ParseAdd("application/octet-stream");
-
-                using var apiResponse = await HttpClient.SendAsync(request);
-
-                if (!apiResponse.IsSuccessStatusCode)
-                {
-                    result.Add($"Could not download file: {apiResponse.StatusCode}.");
-                    return result;
-                }
-
-                await SaveResponse(apiResponse, path);
-            }
-            catch (Exception ex)
-            {
-                result.Add($"Could not download file: {ex.Message}");
-                return result;
-            }
+            if (!await TryDownload(directRequest, path, result)) return result;
 
             result.Add("Download completed.");
 
             result.Success = true;
 
             return result;
+        }
+
+        private static async Task<bool> TryDownload(HttpRequestMessage request, string path, UpdaterResult result)
+        {
+            try
+            {
+                using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    result.Add($"Could not download file: {response.StatusCode}.");
+                    return false;
+                }
+
+                await SaveResponse(response, path);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                result.Add($"Could not download file: {ex.Message}");
+                return false;
+            }
         }
 
         private static async Task SaveResponse(HttpResponseMessage response, string path)
@@ -390,11 +390,21 @@ namespace vatSysLauncher.Controllers
 
         public static async Task CheckVersion()
         {
-            var versionResponse = await Launcher.HttpClient.GetAsync(Launcher.VersionUrl);
+            string content;
 
-            if (!versionResponse.IsSuccessStatusCode) return;
+            try
+            {
+                using var versionResponse = await Launcher.HttpClient.GetAsync(Launcher.VersionUrl);
 
-            var content = await versionResponse.Content.ReadAsStringAsync();
+                if (!versionResponse.IsSuccessStatusCode) return;
+
+                content = await versionResponse.Content.ReadAsStringAsync();
+            }
+            catch
+            {
+                // version check is best-effort; don't block startup if GitHub is unreachable
+                return;
+            }
 
             try
             {

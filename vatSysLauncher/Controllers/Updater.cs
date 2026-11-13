@@ -50,17 +50,49 @@ namespace vatSysLauncher.Controllers
 
         private static async Task<bool> Go()
         {
-            foreach (var command in CurrentCommands.ToList())
-            {
-                var success = await Go(command);
+            var commands = CurrentCommands.ToList();
 
-                if (!success)
+            var success = true;
+
+            try
+            {
+                foreach (var command in commands)
                 {
-                    return false;
+                    if (!await Go(command))
+                    {
+                        success = false;
+                        break;
+                    }
                 }
             }
+            catch
+            {
+                success = false;
+            }
 
-            return true;
+            // always recheck for updates afterwards, whether or not every command succeeded
+            await Refresh(commands);
+
+            return success;
+        }
+
+        private static async Task Refresh(List<string> commands)
+        {
+            CurrentCommands.Clear();
+
+            try
+            {
+                await Profiles.Init();
+
+                await Plugins.Init();
+            }
+            catch { }
+
+            Launcher.GetChanges();
+
+            var type = commands.Select(x => x.Split('|')).LastOrDefault(x => x.Length > 1)?[1];
+
+            Launcher.SetCanvas(type == "Plugin" ? "Plugins" : "Profiles");
         }
 
         private static async Task<bool> Go(string command)
@@ -171,25 +203,7 @@ namespace vatSysLauncher.Controllers
 
             CurrentCommands.Remove(command);
 
-            if (CurrentCommands.Count == 0)
-            {
-                await Profiles.Init();
-
-                await Plugins.Init();
-
-                Launcher.GetChanges();
-
-                if (split[1] == "Profile")
-                {
-                    Launcher.SetCanvas("Profiles");
-                }
-                else if (split[1] == "Plugin")
-                {
-                    Launcher.SetCanvas("Plugins");
-
-                }
-            }
-            return true;
+            return success;
         }
 
         private static bool RunDelete(string directory)
