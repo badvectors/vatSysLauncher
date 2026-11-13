@@ -35,7 +35,15 @@ namespace vatSysLauncher.Controllers
 
                     foreach (var file in dir.GetFiles())
                     {
-                        file.Delete();
+                        try
+                        {
+                            file.Delete();
+                        }
+                        catch (IOException ex)
+                        {
+                            // a leftover file still in use (e.g. a running installer) shouldn't block the update
+                            result.Add($"Skipped file in use: {file.Name} ({ex.Message})");
+                        }
                     }
                 }
                 catch (UnauthorizedAccessException)
@@ -205,7 +213,7 @@ namespace vatSysLauncher.Controllers
             return result;
         }
 
-        public static async Task<UpdaterResult> DownloadFile(string url, string name = "Temp.zip")
+        public static async Task<UpdaterResult> DownloadFile(string url, string name = "Temp.zip", string directory = null)
         {
             var result = new UpdaterResult();
 
@@ -218,7 +226,7 @@ namespace vatSysLauncher.Controllers
 
             result.Add($"Downloading from: {url}.");
 
-            var path = Path.Combine(Launcher.WorkingDirectory, name);
+            var path = Path.Combine(directory ?? Launcher.WorkingDirectory, name);
 
             // GitHub release assets are downloaded through the GitHub API first;
             // the direct github.com link is only used as a fallback.

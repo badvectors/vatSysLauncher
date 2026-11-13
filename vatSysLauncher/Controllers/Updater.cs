@@ -278,20 +278,23 @@ namespace vatSysLauncher.Controllers
         {
             Start();
 
-            // create working directory
+            // download the installer to its own folder, outside the working directory, so the
+            // still-running installer never locks files that later installs need to clear
 
-            var workingResult = Utility.CreateDirectory(Launcher.WorkingDirectory);
+            var updateDirectory = Path.Combine(Launcher.SettingsFolder, "Update");
 
-            if (!workingResult.Success) return false;
+            var updateResult = Utility.CreateDirectory(updateDirectory);
+
+            if (!updateResult.Success) return false;
 
             // download file
 
-            var downloadResult = await Utility.DownloadFile(url, "Launcher.exe");
+            var downloadResult = await Utility.DownloadFile(url, "Launcher.exe", updateDirectory);
 
             if (!downloadResult.Success) return false;
 
             // run file
-            ProcessStartInfo processStartInfo = new(Path.Combine(Launcher.WorkingDirectory, "Launcher.exe"));
+            ProcessStartInfo processStartInfo = new(Path.Combine(updateDirectory, "Launcher.exe"));
 
             // Start the application as new process
             Process.Start(processStartInfo);

@@ -1,6 +1,6 @@
 [Setup]
 AppName=vatSys Launcher
-AppVersion=1.26
+AppVersion=1.27
 AppVerName=vatSys Launcher
 DefaultDirName={autopf}\vatSys Launcher
 OutputBaseFilename=vatSys Launcher
@@ -17,4 +17,4 @@ Name: "{commonprograms}\vatSys Launcher"; Filename: "{app}\vatSysLauncher.exe"; 
 
 [Run]
 Filename: "{app}\vatSysLauncher.exe"; \
-    Flags: postinstall
+    Flags: postinstall nowait
